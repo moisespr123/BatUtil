@@ -188,6 +188,17 @@ the option will also auto exit at the end without prompt
 
 <details><summary>changelog</summary>
 
+10.22:  
+- Fix detection for .NET 4.8.1 pack KB5011048
+- Skip Enablement Package for not applicable editions
+- Skip rebuilding sources\install.wim if wim2esd is enabled
+
+10.21:  
+- Added support for Azure Stack HCI, 22H2 Enablement Package
+
+10.20:  
+- Restore original timestamp for Package_for_RollupFix .mum for 22621+ MSU integration
+
 10.19:  
 - Added support for Windows 11 22622 Enablement Package
 - Fixed Combined UUP update naming scheme for Windows 11 22H2

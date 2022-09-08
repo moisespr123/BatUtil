@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v81
+@set uivr=v83
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -286,7 +286,6 @@ if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell 
 if /i not "%_ntf%"=="NTFS" (
 set "_mount=%SystemDrive%\MountUUP"
 )
-:: set "_mount=!_mount!_%random%"
 set "line============================================================="
 if defined _UUP goto :check
 if %_Debug% neq 0 goto :check
@@ -647,7 +646,7 @@ call :BootPE
 ) else (
 call :BootADK
 )
-if %StartVirtual% neq 0 (
+if %StartVirtual% neq 0 if %_SrvESD% equ 0 (
   if %RefESD% neq 0 call :uups_backup
   ren ISOFOLDER %DVDISO%
   if %AutoStart% neq 0 (goto :V_Auto) else (goto :V_Manu)
@@ -849,7 +848,7 @@ wimlib-imagex.exe info %_file% 1 "%_wsr% %_flg%" "%_wsr% %_flg%" --image-propert
 ) else if !FixDisplay! equ 1 (
 wimlib-imagex.exe info %_file% 1 "!_os!" "!_os!" --image-property DISPLAYNAME="!_dName!" --image-property DISPLAYDESCRIPTION="!_dDesc!" --image-property FLAGS=%_flg% %_Nul3%
 ) else (
-wimlib-imagex.exe info %_file% 1 --image-property FLAGS=%_flg% %_Nul3%
+wimlib-imagex.exe info %_file% 1 --image-property DISPLAYNAME="!_dName!" --image-property DISPLAYDESCRIPTION="!_dDesc!" --image-property FLAGS=%_flg% %_Nul3%
 )
 set _img=1
 if %_count% gtr 1 for /L %%i in (2,1,%_count%) do (
@@ -863,7 +862,7 @@ for /L %%# in (1,1,%uups_esd_num%) do if !_index%%i! equ %%# (
     ) else if !FixDisplay! equ 1 (
     wimlib-imagex.exe info %_file% !_img! "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
     ) else (
-    wimlib-imagex.exe info %_file% !_img! --image-property FLAGS=!edition%%#! %_Nul3%
+    wimlib-imagex.exe info %_file% !_img! --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
     )
   )
 )
@@ -876,7 +875,7 @@ if !_ESDSrv%%#! equ 1 (
   ) else if !FixDisplay! equ 1 (
   wimlib-imagex.exe info %_file% %%# "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
   ) else (
-  wimlib-imagex.exe info %_file% %%# --image-property FLAGS=!edition%%#! %_Nul3%
+  wimlib-imagex.exe info %_file% %%# --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
   )
 )
 if %_reMSU% equ 1 call :uups_msu
@@ -1098,6 +1097,9 @@ if %revmaj%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %revmaj%==19043 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %revmaj%==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %revmaj%==19045 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
+if %revmaj%==19046 if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
+if %revmaj%==20349 if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
+if %revmaj%==20350 if /i "%branch:~0,2%"=="fe" set branch=23h2%branch:~2%
 if %uupmin% lss %revmin% (
 set uupver=%revver%
 set uupmin=%revmin%
@@ -1574,6 +1576,18 @@ if %uupmaj%==19045 (
 if /i "%xdubranch:~0,2%"=="vb" set xdubranch=22h2%xdubranch:~2%
 if %xduver:~0,5%==19041 set xduver=19045%xduver:~5%
 )
+if %uupmaj%==19046 (
+if /i "%xdubranch:~0,2%"=="vb" set xdubranch=23h2%xdubranch:~2%
+if %xduver:~0,5%==19041 set xduver=19046%xduver:~5%
+)
+if %uupmaj%==20349 (
+if /i "%xdubranch:~0,2%"=="fe" set xdubranch=22h2%xdubranch:~2%
+if %xduver:~0,5%==20348 set xduver=20349%xduver:~5%
+)
+if %uupmaj%==20350 (
+if /i "%xdubranch:~0,2%"=="fe" set xdubranch=23h2%xdubranch:~2%
+if %xduver:~0,5%==20348 set xduver=20350%xduver:~5%
+)
 if %uupmaj%==%_fixSV% if %_build% geq 21382 (
 if %xduver:~0,5%==%_build% set xduver=%_fixSV%%xduver:~5%
 )
@@ -1598,7 +1612,10 @@ if exist "!_cabdir!\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=
 if exist "!_cabdir!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!_cabdir!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!_cabdir!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "!_cabdir!\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "!_cabdir!\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "!_cabdir!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
+if exist "!_cabdir!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
+if exist "!_cabdir!\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 )
 set tmpcmp=
@@ -1643,7 +1660,7 @@ if exist "!_cabdir!\*.manifest" del /f /q "!_cabdir!\*.manifest" %_Nul3%
 if exist "!_cabdir!\*.mum" del /f /q "!_cabdir!\*.mum" %_Nul3%
 if exist "!_cabdir!\*.xml" del /f /q "!_cabdir!\*.xml" %_Nul3%
 :: expand.exe -f:update.mum "!_UUP!\%packf%" "!_cabdir!" %_Null%
-7z.exe e "!_UUP!\%packf%" -o"!_cabdir!" update.mum %_Null%
+7z.exe e "!_UUP!\%packf%" -o"!_cabdir!" update.mum -aoa %_Null%
 if not exist "!_cabdir!\update.mum" exit /b
 expand.exe -f:*.psf.cix.xml "!_UUP!\%packf%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*.psf.cix.xml" (
@@ -1707,7 +1724,7 @@ copy /y "!_UUP!\%packf%" "!_dest!\3%packf%" %_Nul3%
 mkdir "!_cabdir!\lcu" %_Nul3%
 expand.exe -f:*Windows*.cab "!_UUP!\%packf%" "!_cabdir!\lcu" %_Null%
 for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab"') do set "compkg=%%#"
-7z.exe e "!_cabdir!\lcu\%compkg%" -o"!_cabdir!" update.mum %_Null%
+7z.exe e "!_cabdir!\lcu\%compkg%" -o"!_cabdir!" update.mum -aoa %_Null%
 expand.exe -f:%_ss%_microsoft-windows-coreos-revision*.manifest "!_cabdir!\lcu\%compkg%" "!_cabdir!" %_Null%
 expand.exe -f:%_ss%_microsoft-updatetargeting-*os_*.manifest "!_cabdir!\lcu\%compkg%" "!_cabdir!" %_Null%
 expand.exe -f:SSU-*%arch%*.cab "!_UUP!\%packf%" "!_cabdir!\lcu" %_Null%
@@ -1743,7 +1760,7 @@ expand.exe -f:%_ss%_microsoft-updatetargeting-*os_*.manifest "!_UUP!\%packf%" "!
 if %_build% geq 21382 if exist "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest" (
 mkdir bin\sxs
 for /f %%a in ('dir /b /a:-d "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest"') do SxSExpand.exe "!_cabdir!\%%a" bin\sxs\%%a %_Nul1%
-move /y bin\sxs\* "!_cabdir!\" %_Nul1%
+if exist "bin\sxs\*.manifest" move /y bin\sxs\* "!_cabdir!\" %_Nul1%
 rmdir /s /q bin\sxs\
 )
 if exist "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest" for /f "tokens=8 delims== " %%# in ('findstr /i Branch "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest"') do if not defined regbranch set regbranch=%%~#
@@ -1764,6 +1781,9 @@ if %uupmaj%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %uupmaj%==19043 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %uupmaj%==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %uupmaj%==19045 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
+if %uupmaj%==19046 if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
+if %uupmaj%==20349 if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
+if %uupmaj%==20350 if /i "%branch:~0,2%"=="fe" set branch=23h2%branch:~2%
 
 set _label=%uupver%.%isodate%.%branch%
 call :setlabel
@@ -1921,6 +1941,21 @@ if /i "%isobranch:~0,2%"=="vb" set isobranch=22h2%isobranch:~2%
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %iduver:~0,5%==19041 set iduver=19045%iduver:~5%
 )
+if %isomaj%==19046 (
+if /i "%isobranch:~0,2%"=="vb" set isobranch=23h2%isobranch:~2%
+if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
+if %iduver:~0,5%==19041 set iduver=19046%iduver:~5%
+)
+if %isomaj%==20349 (
+if /i "%isobranch:~0,2%"=="fe" set isobranch=22h2%isobranch:~2%
+if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
+if %iduver:~0,5%==20348 set iduver=20349%iduver:~5%
+)
+if %isomaj%==20350 (
+if /i "%isobranch:~0,2%"=="fe" set isobranch=23h2%isobranch:~2%
+if /i "%branch:~0,2%"=="fe" set branch=23h2%branch:~2%
+if %iduver:~0,5%==20348 set iduver=20350%iduver:~5%
+)
 if %isomaj%==%_fixSV% if %_build% geq 21382 (
 if %iduver:~0,5%==%_build% set iduver=%_fixSV%%iduver:~5%
 )
@@ -1969,7 +2004,7 @@ if exist "!dest!\" rmdir /s /q "!dest!\"
 mkdir "!dest!"
 set /a count+=1
 :: expand.exe -f:update.mum "!_UUP!\%package%" "!dest!" %_Null%
-7z.exe e "!_UUP!\%package%" -o"!dest!" update.mum %_Null%
+7z.exe e "!_UUP!\%package%" -o"!dest!" update.mum -aoa %_Null%
 if not exist "!dest!\update.mum" (
 expand.exe -f:*defender*.xml "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*defender*.xml" (
@@ -2053,7 +2088,10 @@ if exist "!dest!\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=183
 if exist "!dest!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!dest!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!dest!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "!dest!\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "!dest!\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "!dest!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
+if exist "!dest!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
+if exist "!dest!\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 )
 if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
@@ -2116,7 +2154,7 @@ echo %count%/%_cab%: %package% [Combined UUP]
 mkdir "!_cabdir!\lcu" %_Nul3%
 expand.exe -f:*Windows*.cab "!_UUP!\%package%" "!_cabdir!\lcu" %_Null%
 for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab"') do set "compkg=%%#"
-7z.exe e "!_cabdir!\lcu\%compkg%" -o"!dest!" update.mum %_Null%
+7z.exe e "!_cabdir!\lcu\%compkg%" -o"!dest!" update.mum -aoa %_Null%
 expand.exe -f:SSU-*%arch%*.cab "!_UUP!\%package%" "!_cabdir!\lcu" %_Null%
 if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :inrenssu)
 rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
@@ -2132,6 +2170,7 @@ findstr /i /m /c:"Microsoft-Windows-ProfessionalEdition" "!dest!\update.mum" %_N
 findstr /i /m /c:"Microsoft-Windows-PPIProEdition" "!dest!\update.mum" %_Nul3% || set _eosT=1
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 copy /y "!dest!\update.mum" %SystemRoot%\temp\ %_Nul1%
+if %_build% geq 22621 copy /y "!dest!\update.mum" "!_cabdir!\LCU.mum" %_Nul1%
 call :datemum isodate isotime
 exit /b
 
@@ -2169,7 +2208,7 @@ set "_Wnn=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
 set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
 if exist "%mumtarget%\Windows\Servicing\Packages\*arm64*.mum" (
 set "xBT=arm64"
-set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a0357560ca88a4d"
+set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a035f900ca87ee9"
 set "_EdgKey=%_Wnn%\arm64_%_EdgCmp%_%_Pkt%_none_1e5e2b2c8adcf701"
 set "_CedKey=%_Wnn%\arm64_%_CedCmp%_%_Pkt%_none_df3eefecc502346d"
 ) else if exist "%mumtarget%\Windows\Servicing\Packages\*amd64*.mum" (
@@ -2188,6 +2227,7 @@ set lcumsu=
 set mpamfe=
 set servicingstack=
 set cumulative=
+set netupdt=
 set netpack=
 set netroll=
 set netlcu=
@@ -2313,6 +2353,18 @@ echo.&echo %%#
 )
 cmd /c exit /b !errorlevel!
 if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :errmount
+if not exist "%mumtarget%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :cumwd
+if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :cumwd
+for /f %%# in ('dir /b /a:-d /od "%mumtarget%\Windows\Servicing\Packages\Package_for_RollupFix*.mum"') do set "lcumum=%%#"
+if defined lcumsu if %_build% geq 22621 if exist "!_cabdir!\LCU.mum" (
+%_Nul3% icacls "%mumtarget%\Windows\Servicing\Packages\%lcumum%" /save "!_cabdir!\acl.txt"
+%_Nul3% takeown /f "%mumtarget%\Windows\Servicing\Packages\%lcumum%" /A
+%_Nul3% icacls "%mumtarget%\Windows\Servicing\Packages\%lcumum%" /grant *S-1-5-32-544:F
+%_Nul3% copy /y "!_cabdir!\LCU.mum" "%mumtarget%\Windows\Servicing\Packages\%lcumum%"
+%_Nul3% icacls "%mumtarget%\Windows\Servicing\Packages\%lcumum%" /setowner *S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464
+%_Nul3% icacls "%mumtarget%\Windows\Servicing\Packages" /restore "!_cabdir!\acl.txt"
+%_Nul3% del /f /q "!_cabdir!\acl.txt"
+)
 
 :cumwd
 if defined lcupkg call :ReLCU
@@ -2391,9 +2443,14 @@ for /f "tokens=2 delims=-" %%V in ('echo %pckn%') do set pckid=%%V
 if %xmsu% equ 0 if %_build% geq 21382 if exist "!_UUP!\*Windows1*%pckid%*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows1*%pckid%*%arch%*.msu"') do (
 expand.exe -d -f:*Windows*.psf "!_UUP!\%%#" | findstr /i %arch%\.psf %_Nul3% && goto :eof
 )
+if %_build% geq 20348 if exist "!dest!\update.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\package_1_for*.mum" %_Nul3% && (
+  if exist "!dest!\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (set "netupdt=!netupdt! /PackagePath:!dest!\update.mum"&goto :eof)
+  ))
+)
 if %_build% geq 17763 if exist "!dest!\update.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" (
-  if exist "!dest!\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:!dest!\update.mum") else (if exist "!dest!\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:!dest!\update.mum")
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && (
+  if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" if not exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "!dest!\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (if exist "!dest!\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:!dest!\update.mum") else (if exist "!dest!\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:!dest!\update.mum"))
   ))
 findstr /i /m "Package_for_OasisAsset" "!dest!\update.mum" %_Nul3% && (if not exist "%mumtarget%\Windows\Servicing\packages\*OasisAssets-Package*.mum" goto :eof)
 findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && (
@@ -2413,7 +2470,7 @@ if exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" (
 set "servicingstack=!servicingstack! /PackagePath:!dest!\update.mum"
 goto :eof
 )
-if exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" if exist "!dest!\*_netfx4clientcorecomp.resources*_en-us_*.manifest" (
+if exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 set "netpack=!netpack! /PackagePath:!dest!\update.mum"
 goto :eof
@@ -2455,6 +2512,11 @@ if %_build% geq 16299 (
   for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "!dest!\update.mum" %_Nul6%') do if exist "%mumtarget%\Windows\Servicing\packages\%%~#*.mum" set flash=1
   if "!flash!"=="0" goto :eof
   )
+)
+if exist "!dest!\*enablement-package*.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+  set epkb=0
+  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "!dest!\update.mum" %_Nul6%') do if exist "%mumtarget%\Windows\Servicing\packages\%%~#*.mum" set epkb=1
+  if "!epkb!"=="0" goto :eof
 )
 for %%# in (%directcab%) do (
 if /i "%package%"=="%%~#" (
@@ -2615,7 +2677,7 @@ if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_SxsCom%.manifest" (
 %_Nul3% takeown /f "%mumtarget%\Windows\WinSxS\Manifests" /A
 %_Nul3% icacls "%mumtarget%\Windows\WinSxS\Manifests" /grant:r "*S-1-5-32-544:(OI)(CI)(F)"
 %_Nul3% copy /y "!dest!\%_SxsCom%.manifest" "%mumtarget%\Windows\WinSxS\Manifests\"
-%_Nul3% icacls "%mumtarget%\Windows\WinSxS\Manifests" /setowner "NT SERVICE\TrustedInstaller"
+%_Nul3% icacls "%mumtarget%\Windows\WinSxS\Manifests" /setowner *S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464
 %_Nul3% icacls "%mumtarget%\Windows\WinSxS" /restore "!_cabdir!\acl.txt"
 %_Nul3% del /f /q "!_cabdir!\acl.txt"
 )
@@ -2983,8 +3045,11 @@ if exist "%mumtarget%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" goto 
 if not exist "%_target%\sources\sxs\*netfx3*.cab" goto :eof
 set "net35source=%_target%\sources\sxs"
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:"%net35source%"
+if defined netupdt (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netupdt%
+)
 if not defined netroll if not defined netlcu if not defined netmsu if not defined cumulative (call :cleanmanual&goto :eof)
-if %_build% geq 20231 dir /b /ad "%mumtarget%\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (call :cleanmanual&goto :eof)
+if not defined netupdt if %_build% geq 20231 dir /b /ad "%mumtarget%\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (call :cleanmanual&goto :eof)
 set netxtr=
 if defined netroll set "netxtr=%netroll%"
 if defined netlcu set "netxtr=%netxtr% %netlcu%"

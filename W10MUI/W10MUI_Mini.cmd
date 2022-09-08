@@ -118,9 +118,13 @@ if /i %xOS%==amd64 set "DISMRoot=!WORKDIR!\dism\dism64\dism.exe"
 if %winbuild% geq 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
 
 :check
+cd /d "!WORKDIR!"
+if "!WINPEPATH!"=="" (
+for /f %%# in ('dir /b /ad "WinPE\amd64\WinPE_OCs\*-*" %_Nul6%') do if exist "WinPE\amd64\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WORKDIR!\WinPE"
+for /f %%# in ('dir /b /ad "WinPE\x86\WinPE_OCs\*-*" %_Nul6%') do if exist "WinPE\x86\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WORKDIR!\WinPE"
+)
 if not "!WINPEPATH!"=="" set "WinPERoot=!WINPEPATH!"
 if not exist "!WinPERoot!\amd64\WinPE_OCs\*" if not exist "!WinPERoot!\x86\WinPE_OCs\*" set WINPE=0
-cd /d "!WORKDIR!"
 if not exist "!_7z!" goto :E_BIN
 if not exist "!DISMRoot!" goto :E_BIN
 set _dism2="!DISMRoot!" /English /ScratchDir
@@ -201,8 +205,8 @@ set foundupdates=0
 if exist ".\Updates\W10UI.cmd" (
 if exist ".\Updates\SSU-*-*.cab" set foundupdates=1
 if exist ".\Updates\SSU-*-*.msu" set foundupdates=1
-if exist ".\Updates\*Windows10*KB*.cab" set foundupdates=1
-if exist ".\Updates\*Windows10*KB*.msu" set foundupdates=1
+if exist ".\Updates\*Windows1*-KB*.cab" set foundupdates=1
+if exist ".\Updates\*Windows1*-KB*.msu" set foundupdates=1
 )
 
 for /L %%j in (1,1,%LANGUAGES%) do (
