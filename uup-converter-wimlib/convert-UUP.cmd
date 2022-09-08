@@ -150,7 +150,7 @@ set "_cabdir=%_drv%\W10UIuup"
 if "%_work:~0,2%"=="\\" set "_cabdir=%~dp0temp\W10UIuup"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
-set psfnet=1
+set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
 for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
