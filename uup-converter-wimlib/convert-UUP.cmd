@@ -61,6 +61,9 @@ set SkipEdge=0
 :: Change to 1 to exit the process on completion without prompt
 set AutoExit=0
 
+:: Change to the number of threads you want to use
+set CPUThreads=8
+
 :: ### Store Apps for builds 22563 and later ###
 
 :: Change to 1 for not integrating store apps into install.wim
@@ -342,6 +345,7 @@ ForceDism
 RefESD
 SkipEdge
 AutoExit
+CPUThreads
 SkipApps
 AppsLevel
 CustomList
@@ -579,6 +583,7 @@ echo.
   ForceDism
   RefESD
   AutoExit
+  CPUThreads
   ) do (
   if !%%#! neq 0 echo %%#
   )
@@ -662,7 +667,7 @@ echo %line%
 echo Converting install.wim to install.esd . . .
 echo %line%
 echo.
-wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\install.esd --compress=LZMS --solid %_Supp%
+wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\install.esd --compress=LZMS --solid --threads=%CPUThreads% %_Supp%
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q ISOFOLDER\sources\install.esd %_Nul3%)
 if exist ISOFOLDER\sources\install.esd del /f /q ISOFOLDER\sources\install.wim
@@ -810,7 +815,7 @@ echo %line%
 echo Converting install.wim to install.esd . . .
 echo %line%
 echo.
-wimlib-imagex.exe export install.wim all install.esd --compress=LZMS --solid %_Supp%
+wimlib-imagex.exe export install.wim all install.esd --compress=LZMS --solid --threads=%CPUThreads% %_Supp%
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q install.esd %_Nul3%)
 if exist install.esd del /f /q install.wim
@@ -840,7 +845,7 @@ echo %line%
 echo.
 if exist "temp\*.ESD" (set _rrr=--ref="temp\*.esd") else (set "_rrr=")
 if %WIMFILE%==install.wim set _rrr=%_rrr% --compress=LZX
-wimlib-imagex.exe export "!MetadataESD!" 3 %_file% --ref="!_UUP!\*.esd" %_rrr% %_Supp%
+wimlib-imagex.exe export "!MetadataESD!" 3 %_file% --ref="!_UUP!\*.esd" --threads=%CPUThreads% %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 if !_Srvr! equ 1 (
@@ -853,7 +858,7 @@ wimlib-imagex.exe info %_file% 1 --image-property DISPLAYNAME="!_dName!" --image
 set _img=1
 if %_count% gtr 1 for /L %%i in (2,1,%_count%) do (
 for /L %%# in (1,1,%uups_esd_num%) do if !_index%%i! equ %%# (
-  wimlib-imagex.exe export "!_UUP!\!uups_esd%%#!" 3 %_file% --ref="!_UUP!\*.esd" %_rrr% %_Supp%
+  wimlib-imagex.exe export "!_UUP!\!uups_esd%%#!" 3 %_file% --ref="!_UUP!\*.esd" --threads=%CPUThreads% %_rrr% %_Supp%
   call set ERRORTEMP=!ERRORLEVEL!
   if !ERRORTEMP! neq 0 goto :E_Export
   set /a _img+=1
@@ -867,7 +872,7 @@ for /L %%# in (1,1,%uups_esd_num%) do if !_index%%i! equ %%# (
   )
 )
 if %AIO% equ 1 for /L %%# in (2,1,%uups_esd_num%) do (
-wimlib-imagex.exe export "!_UUP!\!uups_esd%%#!" 3 %_file% --ref="!_UUP!\*.esd" %_rrr% %_Supp%
+wimlib-imagex.exe export "!_UUP!\!uups_esd%%#!" 3 %_file% --ref="!_UUP!\*.esd" --threads=%CPUThreads% %_rrr% %_Supp%
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 goto :E_Export
 if !_ESDSrv%%#! equ 1 (
@@ -904,7 +909,7 @@ echo %line%
 echo Creating winre.wim . . .
 echo %line%
 echo.
-wimlib-imagex.exe export "!MetadataESD!" 2 temp\winre.wim --compress=LZX --boot %_Supp%
+wimlib-imagex.exe export "!MetadataESD!" 2 temp\winre.wim --compress=LZX --boot --threads=%CPUThreads% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 if %uwinpe% equ 1 if %AddUpdates% equ 1 if %_updexist% equ 1 (
@@ -912,7 +917,7 @@ call :uups_update temp\winre.wim
 )
 if %relite% neq 0 (
 ren temp\winre.wim boot.wim
-wimlib-imagex.exe export temp\boot.wim 2 temp\winre.wim --compress=LZX --boot %_Supp%
+wimlib-imagex.exe export temp\boot.wim 2 temp\winre.wim --compress=LZX --boot --threads=%CPUThreads% %_Supp%
 wimlib-imagex.exe delete temp\boot.wim 2 --soft %_Nul3%
 )
 if %SkipWinRE% neq 0 goto :%_rtrn%
@@ -985,7 +990,7 @@ for /f %%# in (bin\bootwim.txt) do if exist "ISOFOLDER\sources\%%#" (
 for /f %%# in (bin\bootmui.txt) do if exist "ISOFOLDER\sources\%langid%\%%#" (
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%langid%^\%%#' '^\sources^\%langid%^\%%#'
 )
-wimlib-imagex.exe export %_srcwim% 1 ISOFOLDER\sources\boot.wim "Microsoft Windows Setup (%arch%)" "Microsoft Windows Setup (%arch%)" --boot %_Supp%
+wimlib-imagex.exe export %_srcwim% 1 ISOFOLDER\sources\boot.wim "Microsoft Windows Setup (%arch%)" "Microsoft Windows Setup (%arch%)" --boot --threads=%CPUThreads% %_Supp%
 wimlib-imagex.exe update ISOFOLDER\sources\boot.wim 2 < bin\boot-wim.txt %_Null%
 wimlib-imagex.exe info ISOFOLDER\sources\boot.wim 2 --image-property FLAGS=2 %_Nul3%
 if %relite% neq 0 wimlib-imagex.exe optimize ISOFOLDER\sources\boot.wim %_Supp%
